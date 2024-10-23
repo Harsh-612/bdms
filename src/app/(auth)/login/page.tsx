@@ -3,19 +3,21 @@
 import { useState, FormEvent } from 'react'
 import { motion } from 'framer-motion'
 import { Droplet, LogIn } from 'lucide-react'
-
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from 'next/link'
+import { toast } from 'sonner'
+import axios from 'axios'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState({ email: '', password: '' })
-  const [loginError, setLoginError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   const validateForm = () => {
     let isValid = true
@@ -32,9 +34,6 @@ export default function LoginPage() {
     if (!password) {
       newErrors.password = 'Password is required'
       isValid = false
-    } else if (password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters long'
-      isValid = false
     }
 
     setErrors(newErrors)
@@ -43,14 +42,29 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setLoginError(null)
+    setIsLoading(true)
 
     if (validateForm()) {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // For demonstration purposes, always show an error
-      setLoginError("Invalid email or password. Please try again.")
+      try {
+        const result:any = await axios.post("/api/login",{email,password})
+        if (result.data.success) {
+          toast.success("Logged in successfully")
+          if(result.data.isAdmin){
+            router.push("/user")
+          }else{
+            router.push('/dashboard')
+          }
+          
+        } else {
+          toast.error(result.error || "Failed to log in")
+        }
+      } catch (error) {
+        toast.error("An unexpected error occurred")
+      } finally {
+        setIsLoading(false)
+      }
+    } else {
+      setIsLoading(false)
     }
   }
 
@@ -66,9 +80,9 @@ export default function LoginPage() {
             <div className="flex items-center justify-center mb-4">
               <Droplet className="h-12 w-12 text-primary" />
             </div>
-            <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">Log In</CardTitle>
             <CardDescription className="text-center">
-              Enter your email and password to access your account
+              Enter your credentials to access your account
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -79,7 +93,6 @@ export default function LoginPage() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="john@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className={errors.email ? "border-destructive" : ""}
@@ -101,23 +114,18 @@ export default function LoginPage() {
                     <p className="text-sm text-destructive">{errors.password}</p>
                   )}
                 </div>
-                {loginError && (
-                  <Alert variant="destructive">
-                    <AlertDescription>{loginError}</AlertDescription>
-                  </Alert>
-                )}
-                <Button type="submit" className="w-full">
-                  <LogIn className="mr-2 h-4 w-4" /> Sign In
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  <LogIn className="mr-2 h-4 w-4" /> 
+                  {isLoading ? 'Logging In...' : 'Log In'}
                 </Button>
               </div>
             </form>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-             
+          <CardFooter>
             <div className="text-sm text-muted-foreground text-center w-full">
               Don't have an account?{" "}
               <Link href="/signup" className='text-primary'>
-              Sign Up
+                Sign up
               </Link>
             </div>
           </CardFooter>

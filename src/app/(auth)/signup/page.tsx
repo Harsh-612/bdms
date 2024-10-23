@@ -21,7 +21,7 @@ export default function SignUpPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [agreeTerms, setAgreeTerms] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [errors, setErrors] = useState({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '', agreeTerms: '' })
   const [isLoading, setIsLoading] = useState(false)
 
@@ -60,10 +60,7 @@ export default function SignUpPage() {
       isValid = false
     }
 
-    if (!agreeTerms) {
-      newErrors.agreeTerms = 'You must agree to the terms and conditions'
-      isValid = false
-    }
+    
 
     setErrors(newErrors)
     return isValid
@@ -79,7 +76,8 @@ export default function SignUpPage() {
           firstName,
           lastName,
           password,
-          email
+          email,
+          isAdmin
         })
         if (res.status === 201) {
           toast.success("Account created successfully")
@@ -187,11 +185,11 @@ export default function SignUpPage() {
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="agreeTerms" 
-                    checked={agreeTerms}
-                    onCheckedChange={(checked) => setAgreeTerms(checked as boolean)}
+                    checked={isAdmin}
+                    onCheckedChange={(checked) => setIsAdmin(checked as boolean)}
                   />
-                  <Label htmlFor="agreeTerms" className="text-sm">
-                    I agree to the terms and conditions
+                  <Label htmlFor="isAdmin" className="text-sm">
+                    Signup as Admin
                   </Label>
                 </div>
                 {errors.agreeTerms && (
